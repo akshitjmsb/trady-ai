@@ -1,82 +1,69 @@
 # app.py
 import streamlit as st
 import pandas as pd
+import requests
+import json
 from trady_brain import ask_trady
 
-st.set_page_config(page_title="Trady AI", page_icon="📊")
-st.title("📊 Trady AI – Your Personal Wealth Bot")
-st.caption("🔐 Secure & Private | Data stays on your machine")
+st.set_page_config(page_title="Trady AI", page_icon="📈")
 
-# Upload CSV file
-st.subheader("📂 Upload Your Portfolio CSV")
-st.markdown("Upload a CSV file containing your portfolio holdings with the following column headers:")
-st.code("symbol, units, avg_price", language="text")
+st.title("📊 Trady AI: Your Portfolio Assistant")
 
-uploaded_file = st.file_uploader("Choose your portfolio CSV file", type=["csv"])
+# === MODEL SELECTION ===
+MODEL_OPTIONS = [
+    "google/gemini-2.5-pro-exp-03-25:free",
+    "meta-llama/llama-4-maverick:free",
+    "meta-llama/llama-4-scout:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
+    "deepseek/deepseek-r1:free",
+    "moonshotai/kimi-vl-a3b-thinking:free",
+    "nvidia/llama-3.1-nemotron-nano-8b-v1:free",
+    "nousresearch/deephermes-3-llama-3-8b-preview:free"
+]
+
+selected_model = st.selectbox("💡 Choose AI Model", MODEL_OPTIONS, index=0, help="Select the LLM model for Trady AI:")
+
+# === PORTFOLIO UPLOAD / INPUT ===
+st.header("📊 Current Portfolio")
+
+portfolio_df = pd.DataFrame(columns=["symbol", "units", "avg_price"])
+
+uploaded_file = st.file_uploader("Upload your portfolio as a CSV file (symbol, units, avg_price):", type="csv")
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file)
-        if {'symbol', 'units', 'avg_price'}.issubset(df.columns):
-            portfolio = df.to_dict(orient="records")
-            st.session_state["portfolio"] = portfolio
-            st.success("✅ Portfolio loaded successfully from CSV!")
-        else:
-            st.error("❌ CSV must contain columns: symbol, units, avg_price")
+        portfolio_df = pd.read_csv(uploaded_file)
     except Exception as e:
-        st.error(f"❌ Error reading CSV: {e}")
+        st.error(f"Error reading CSV: {e}")
 
-# Manual Holdings form (fallback)
-st.subheader("✍️ Or Enter Holdings Manually")
-st.markdown("Input your portfolio manually, one line per holding, using the format:")
-st.code("VEQT.TO, 10, 28.50", language="text")
-
-with st.form("holdings_form"):
-    tickers = st.text_area("📥 Holdings Input",
-                          placeholder="Example: VEQT.TO, 10, 28.50")
-    submitted = st.form_submit_button("💾 Save Portfolio")
-
-if submitted:
-    portfolio = []
-    for line in tickers.strip().splitlines():
+else:
+    st.markdown("**📥 Or Enter Holdings Manually**")
+    manual_input = st.text_area("Enter each holding (e.g., VEQT.TO,10,28.50)",
+                                 placeholder="Example: VEQT.TO,10,28.50\nTSLA,5,670.25",
+                                 height=150)
+    if st.button("Save Portfolio") and manual_input:
         try:
-            symbol, units, avg_price = line.strip().split(',')
-            portfolio.append({
-                "symbol": symbol.strip(),
-                "units": float(units.strip()),
-                "avg_price": float(avg_price.strip())
-            })
-        except ValueError:
-            st.error(f"❌ Invalid line format: {line}")
-    st.session_state["portfolio"] = portfolio
-    st.success("✅ Portfolio saved successfully!")
+            lines = manual_input.strip().split("\n")
+            data = [line.split(",") for line in lines if len(line.split(",")) == 3]
+            portfolio_df = pd.DataFrame(data, columns=["symbol", "units", "avg_price"])
+            portfolio_df["units"] = portfolio_df["units"].astype(float)
+            portfolio_df["avg_price"] = portfolio_df["avg_price"].astype(float)
+        except Exception as e:
+            st.error(f"Invalid format: {e}")
 
-# Model selection
-def get_model_list():
-    return [
-        "mistralai/mixtral-8x7b",
-        "openai/gpt-3.5-turbo",
-        "openai/gpt-4-turbo",
-        "anthropic/claude-3-opus",
-        "meta-llama/llama-3-70b-instruct"
-    ]
+if not portfolio_df.empty:
+    st.dataframe(portfolio_df, use_container_width=True)
 
-st.subheader("🧠 Choose AI Model")
-st.session_state["selected_model"] = st.selectbox(
-    "Select the LLM model for Trady AI:", get_model_list(), index=0
-)
+# === ASK TRADY AI ===
+st.header("🤖 Ask Trady AI")
+question = st.text_input("💬 What would you like to ask about your portfolio?")
 
-# Show saved portfolio and enable chat
-if "portfolio" in st.session_state and st.session_state["portfolio"]:
-    st.subheader("📊 Current Portfolio")
-    st.dataframe(pd.DataFrame(st.session_state["portfolio"]))
-
-    st.subheader("🤖 Ask Trady AI")
-    user_input = st.text_input("💬 What would you like to ask about your portfolio?")
-
-    if user_input:
-        with st.spinner("Thinking..."):
-            reply = ask_trady(user_input, st.session_state["portfolio"], st.session_state["selected_model"])
-            st.markdown(f"**🤖 Trady AI:** {reply}")
+if question and not portfolio_df.empty:
+    with st.spinner("Trady AI is thinking..."):
+        try:
+            response = ask_trady(portfolio_df, question, model=selected_model)
+            st.markdown(response)
+        except Exception as e:
+            st.error(f"❌ Trady AI: {e}")
 else:
     st.warning("📌 Please upload or enter your portfolio before chatting with Trady AI.")
