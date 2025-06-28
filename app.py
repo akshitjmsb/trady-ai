@@ -3,7 +3,11 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+from pathlib import Path
 from trady_brain import ask_trady
+
+# Local CSV file used to persist the user portfolio across app restarts
+PORTFOLIO_FILE = Path(__file__).with_name(".trady_portfolio.csv")
 
 st.set_page_config(page_title="Trady AI", page_icon="📈")
 
@@ -19,6 +23,7 @@ MODEL_OPTIONS = [
     "moonshotai/kimi-vl-a3b-thinking:free",  # Creative insights - good for strategic portfolio planning
     "nvidia/llama-3.1-nemotron-nano-8b-v1:free",  # Lightweight - good for basic portfolio calculations
     "nousresearch/deephermes-3-llama-3-8b-preview:free"  # Specialized - good for technical financial analysis
+
 ]
 
 selected_model = st.selectbox("💡 Choose AI Model", MODEL_OPTIONS, index=0, help="Select the LLM model for Trady AI:")
@@ -26,13 +31,23 @@ selected_model = st.selectbox("💡 Choose AI Model", MODEL_OPTIONS, index=0, he
 # === PORTFOLIO UPLOAD / INPUT ===
 st.header("📊 Current Portfolio")
 
-portfolio_df = pd.DataFrame(columns=["symbol", "units", "avg_price"])
+# --- Session-level portfolio persistence ---
+if "portfolio_df" not in st.session_state:
+    if PORTFOLIO_FILE.exists():
+        st.session_state["portfolio_df"] = pd.read_csv(PORTFOLIO_FILE)
+    else:
+        st.session_state["portfolio_df"] = pd.DataFrame(columns=["symbol", "units", "avg_price"])
+
+portfolio_df = st.session_state["portfolio_df"]  # work with session copy
 
 uploaded_file = st.file_uploader("Upload your portfolio as a CSV file (symbol, units, avg_price):", type="csv")
 
 if uploaded_file:
     try:
-        portfolio_df = pd.read_csv(uploaded_file)
+        st.session_state["portfolio_df"] = pd.read_csv(uploaded_file)
+        portfolio_df = st.session_state["portfolio_df"]
+        # persist to disk
+        portfolio_df.to_csv(PORTFOLIO_FILE, index=False)
     except Exception as e:
         st.error(f"Error reading CSV: {e}")
 
@@ -45,14 +60,28 @@ else:
         try:
             lines = manual_input.strip().split("\n")
             data = [line.split(",") for line in lines if len(line.split(",")) == 3]
-            portfolio_df = pd.DataFrame(data, columns=["symbol", "units", "avg_price"])
-            portfolio_df["units"] = portfolio_df["units"].astype(float)
-            portfolio_df["avg_price"] = portfolio_df["avg_price"].astype(float)
+            df = pd.DataFrame(data, columns=["symbol", "units", "avg_price"])
+            df["units"] = df["units"].astype(float)
+            df["avg_price"] = df["avg_price"].astype(float)
+            st.session_state["portfolio_df"] = df
+            portfolio_df = df
+            # persist to disk
+            df.to_csv(PORTFOLIO_FILE, index=False)
         except Exception as e:
             st.error(f"Invalid format: {e}")
 
 if not portfolio_df.empty:
     st.dataframe(portfolio_df, use_container_width=True)
+    edit_choice = st.radio("Need to edit your portfolio?", ["No", "Yes"], index=0, horizontal=True)
+    if edit_choice == "Yes":
+        st.session_state["portfolio_df"] = pd.DataFrame(columns=["symbol", "units", "avg_price"])
+        if PORTFOLIO_FILE.exists():
+            PORTFOLIO_FILE.unlink()
+        # Trigger a full app rerun (handle different Streamlit versions)
+        if hasattr(st, "rerun"):
+            st.rerun()
+        elif hasattr(st, "experimental_rerun"):
+            st.experimental_rerun()
 
 # === ASK TRADY AI ===
 st.header("🤖 Ask Trady AI")
