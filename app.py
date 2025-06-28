@@ -11,14 +11,14 @@ st.title("📊 Trady AI: Your Portfolio Assistant")
 
 # === MODEL SELECTION ===
 MODEL_OPTIONS = [
-    "google/gemini-2.5-pro-exp-03-25:free",
-    "meta-llama/llama-4-maverick:free",
-    "meta-llama/llama-4-scout:free",
-    "mistralai/mistral-small-3.1-24b-instruct:free",
-    "deepseek/deepseek-r1:free",
-    "moonshotai/kimi-vl-a3b-thinking:free",
-    "nvidia/llama-3.1-nemotron-nano-8b-v1:free",
-    "nousresearch/deephermes-3-llama-3-8b-preview:free"
+    "mistralai/mistral-small-3.1-24b-instruct:free",  # Best for portfolio analysis - excellent with numerical data and financial concepts
+    "google/gemini-2.5-pro-exp-03-25:free",  # Strong general performance - good for complex analysis and reasoning
+    "meta-llama/llama-4-scout:free",  # Quick and efficient - good for simple portfolio questions
+    "meta-llama/llama-4-maverick:free",  # Advanced analysis - good for detailed financial insights
+    "deepseek/deepseek-r1:free",  # Research-focused - good for in-depth market analysis
+    "moonshotai/kimi-vl-a3b-thinking:free",  # Creative insights - good for strategic portfolio planning
+    "nvidia/llama-3.1-nemotron-nano-8b-v1:free",  # Lightweight - good for basic portfolio calculations
+    "nousresearch/deephermes-3-llama-3-8b-preview:free"  # Specialized - good for technical financial analysis
 ]
 
 selected_model = st.selectbox("💡 Choose AI Model", MODEL_OPTIONS, index=0, help="Select the LLM model for Trady AI:")
