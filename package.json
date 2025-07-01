@@ -1,0 +1,27 @@
+{
+  "name": "trady-ai",
+  "version": "1.0.0",
+  "description": "Trady AI is a secure, interactive Streamlit app that helps you analyze your investment portfolio using open-source LLMs via OpenRouter.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akshitjmsb/trady-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akshitjmsb/trady-ai/issues"
+  },
+  "homepage": "https://github.com/akshitjmsb/trady-ai#readme",
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

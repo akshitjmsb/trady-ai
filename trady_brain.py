@@ -1,86 +1,118 @@
 # trady_brain.py
 import os
-import json
 from datetime import date
-from typing import List
-
-import requests
 import yfinance as yf
 import pandas as pd
 from dotenv import load_dotenv
 
+# LangChain imports
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import tool, AgentExecutor, create_react_agent
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain import hub
+
 load_dotenv()
 
-def _attach_live_prices(df):
-    """Enrich the portfolio DataFrame with today's close price and gain %."""
-    tickers: List[str] = df["symbol"].tolist()
+# --- DEFINE TOOLS ---
+@tool
+def get_stock_price(symbol: str) -> str:
+    """Fetches the latest stock price for a given stock symbol from Yahoo Finance."""
     try:
-        price_df = yf.download(tickers, period="1d", progress=False, threads=True)
-        # yf.download returns a DataFrame; if multiple tickers we get multi-index columns
-        if isinstance(price_df.columns, pd.MultiIndex):
-            closes = price_df["Adj Close"].iloc[-1]
-        else:
-            closes = price_df.iloc[-1]
-        df["last_price"] = df["symbol"].map(closes.to_dict())
-    except Exception:
-        # fallback per-ticker (slower)
-        prices = {}
-        for sym in tickers:
-            try:
-                prices[sym] = yf.Ticker(sym).history(period="1d")["Close"].iloc[-1]
-            except Exception:
-                prices[sym] = float('nan')
-        df["last_price"] = df["symbol"].map(prices)
-
-    # compute gain % where data available
-    df["gain_%"] = (df["last_price"] - df["avg_price"]) / df["avg_price"] * 100
-    return df
-
-def ask_trady(portfolio_df, question, model):
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        return "❌ OpenRouter API key not found. Please set it in .env."
-
-    # enrich portfolio with live prices
-    portfolio_df = _attach_live_prices(portfolio_df.copy())
-
-    today = date.today().isoformat()
-
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                f"You are Trady AI, a portfolio analyst. Today is {today}. "
-                "Live prices were fetched from Yahoo Finance and are included as 'last_price' and 'gain_%'. "
-                "Provide concise Buy / Hold / Sell suggestions. Do not invent prices. If data is missing, say so."
-            )
-        },
-        {
-            "role": "user",
-            "content": f"My portfolio (with live prices):\n{portfolio_df.to_string(index=False)}\n\n{question}"
-        }
-    ]
-
-    try:
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "HTTP-Referer": "https://trady-ai",
-                "X-Title": "Trady AI"
-            },
-            json={
-                "model": model,
-                "messages": messages
-            },
-            timeout=60
-        )
-        result = response.json()
-
-        if "choices" in result:
-            return result["choices"][0]["message"]["content"]
-        else:
-            return f"❌ No 'choices' key in response: {result}"
-
+        ticker = yf.Ticker(symbol)
+        todays_data = ticker.history(period='1d')
+        if todays_data.empty:
+            return f"Could not find price data for {symbol}."
+        price = todays_data['Close'].iloc[-1]
+        return f"The latest price of {symbol} is ${price:.2f}."
     except Exception as e:
-        return f"❌ Error while calling OpenRouter: {e}"
+        return f"Error fetching price for {symbol}: {e}"
+
+@tool
+def get_financial_news(query: str) -> str:
+    """Searches for recent financial news about a company or topic."""
+    try:
+        # First try DuckDuckGo
+        search = DuckDuckGoSearchRun()
+        result = search.run(f"financial news about {query}")
+        if not result or "Ratelimit" in str(result):
+            raise Exception("DuckDuckGo rate limit reached")
+        return result
+    except Exception as e:
+        # Fallback to SerpAPI if available
+        serpapi_key = os.getenv('SERPAPI_API_KEY')
+        if serpapi_key:
+            from langchain_community.utilities import GoogleSerperAPIWrapper
+            search = GoogleSerperAPIWrapper(serpapi_api_key=serpapi_key)
+            return search.run(f"financial news about {query}")
+        else:
+            return "Unable to fetch financial news at the moment due to rate limits. Please try again later or set up a SERPAPI_API_KEY in your .env file for more reliable results."
+
+# --- MAIN AGENT FUNCTION ---
+def ask_trady(portfolio_df: pd.DataFrame, question: str):
+    """The main function that runs the LangChain agent."""
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    if not google_api_key:
+        return "❌ Google API key not found. Please set it in .env as GOOGLE_API_KEY."
+
+    # 1. Initialize the LLM
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", google_api_key=google_api_key)
+
+    # 2. Define the tools the agent can use
+    tools = [get_stock_price, get_financial_news]
+
+    # 3. Get the prompt template
+    # This prompt tells the agent how to behave.
+    prompt = hub.pull("hwchase17/react")
+
+    # 4. Create the agent
+    agent = create_react_agent(llm, tools, prompt)
+
+    # 5. Create the Agent Executor
+    # This is the runtime for the agent.
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+
+    # 6. Format the input for the agent
+    # We include the portfolio context along with the user's question.
+    portfolio_string = portfolio_df.to_string(index=False)
+    input_prompt = f"""
+    You are Trady AI, a helpful financial assistant. Today is {date.today().isoformat()}.
+
+    Here is the user's current portfolio:
+    {portfolio_string}
+
+    Analyze the user's question and use your available tools to provide a helpful and comprehensive response.
+
+    User's question: {question}
+    """
+
+    # 7. Invoke the agent and return the response
+    try:
+        response = agent_executor.invoke({"input": input_prompt})
+        return response.get('output', "No response generated.")
+    except Exception as e:
+        return f"❌ Error while running LangChain agent: {e}"
+
+# --- Example Usage ---
+if __name__ == "__main__":
+    # Create a dummy portfolio DataFrame for testing
+    data = {
+        'symbol': ['AAPL', 'GOOGL', 'MSFT', 'TSLA'],
+        'shares': [10, 5, 12, 3],
+        'avg_price': [150.0, 1200.0, 250.0, 700.0]
+    }
+    portfolio_df_test = pd.DataFrame(data)
+
+    print("--- Test 1: Asking for a stock price (should use get_stock_price tool) ---")
+    question1 = "What is the current price of GOOGL?"
+    result1 = ask_trady(portfolio_df_test, question1)
+    print(f"\nFinal Answer:\n{result1}")
+
+    print("\n\n--- Test 2: Asking for news (should use get_financial_news tool) ---")
+    question2 = "What is the latest news about Tesla?"
+    result2 = ask_trady(portfolio_df_test, question2)
+    print(f"\nFinal Answer:\n{result2}")
+
+    print("\n\n--- Test 3: Asking a portfolio-related question ---")
+    question3 = "Based on the latest news, should I be worried about my Apple stock?"
+    result3 = ask_trady(portfolio_df_test, question3)
+    print(f"\nFinal Answer:\n{result3}")
