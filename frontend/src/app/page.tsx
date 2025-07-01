@@ -31,6 +31,7 @@ import { Trash2 } from "lucide-react";
 interface Stock {
   ticker: string;
   quantity: number;
+  unitPrice: number;
 }
 
 interface Message {
@@ -42,6 +43,7 @@ export default function Home() {
   const [portfolio, setPortfolio] = useState<Stock[]>([]);
   const [ticker, setTicker] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -94,24 +96,54 @@ export default function Home() {
     }
   };
 
-  const handleAddStock = () => {
-    const numQuantity = parseInt(quantity, 10);
-    if (ticker.trim() && !isNaN(numQuantity) && numQuantity > 0) {
-      setPortfolio([
-        ...portfolio,
-        { ticker: ticker.trim().toUpperCase(), quantity: numQuantity },
-      ]);
-      setTicker("");
-      setQuantity("");
+  // Sync manual portfolio to backend
+  const syncManualPortfolio = async (newPortfolio: Stock[]) => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/manual_portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPortfolio),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to sync manual portfolio.');
+      }
+    } catch (err) {
+      alert('Error syncing manual portfolio: ' + (err instanceof Error ? err.message : err));
     }
   };
 
-  const handleRemoveStock = (indexToRemove: number) => {
-    setPortfolio(portfolio.filter((_, index) => index !== indexToRemove));
+  const handleAddStock = async () => {
+    const numQuantity = parseInt(quantity, 10);
+    const numUnitPrice = parseFloat(unitPrice);
+    if (
+      ticker.trim() &&
+      !isNaN(numQuantity) && numQuantity > 0 &&
+      !isNaN(numUnitPrice) && numUnitPrice > 0
+    ) {
+      const newPortfolio = [
+        ...portfolio,
+        { ticker: ticker.trim().toUpperCase(), quantity: numQuantity, unitPrice: numUnitPrice },
+      ];
+      setPortfolio(newPortfolio);
+      setTicker("");
+      setQuantity("");
+      setUnitPrice("");
+      await syncManualPortfolio(newPortfolio);
+    }
+  };
+
+  const handleRemoveStock = async (indexToRemove: number) => {
+    const newPortfolio = portfolio.filter((_, index) => index !== indexToRemove);
+    setPortfolio(newPortfolio);
+    await syncManualPortfolio(newPortfolio);
   };
 
   const handleSendMessage = async (event: React.FormEvent) => {
     event.preventDefault();
+    // Sync manual portfolio before chat if on manual tab
+    if (activeTab === "manual" && portfolio.length > 0) {
+      await syncManualPortfolio(portfolio);
+    }
     if (chatInput.trim() && !isReplying) {
       const newUserMessage: Message = { role: "user", content: chatInput.trim() };
       setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
@@ -198,8 +230,21 @@ export default function Home() {
                           placeholder="e.g., 10"
                           value={quantity}
                           onChange={(e) => setQuantity(e.target.value)}
+                          min="1"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="unitPrice">Unit Price</Label>
+                      <Input
+                        id="unitPrice"
+                        type="number"
+                        placeholder="e.g., 150.00"
+                        value={unitPrice}
+                        onChange={(e) => setUnitPrice(e.target.value)}
+                        min="0.01"
+                        step="0.01"
+                      />
                     </div>
                     <Button onClick={handleAddStock}>Add Stock</Button>
                     {portfolio.length > 0 && (
@@ -209,6 +254,7 @@ export default function Home() {
                             <TableRow>
                               <TableHead>Ticker</TableHead>
                               <TableHead>Quantity</TableHead>
+                              <TableHead>Unit Price</TableHead>
                               <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -219,6 +265,7 @@ export default function Home() {
                                   {stock.ticker}
                                 </TableCell>
                                 <TableCell>{stock.quantity}</TableCell>
+                                <TableCell>${stock.unitPrice.toFixed(2)}</TableCell>
                                 <TableCell className="text-right">
                                   <Button
                                     variant="ghost"

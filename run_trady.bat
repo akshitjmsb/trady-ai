@@ -1,13 +1,14 @@
 @echo off
-ECHO Starting Trady AI...
-
-REM Get the directory of the batch file
 set "BATCH_DIR=%~dp0"
+echo Starting Trady AI Backend and Frontend...
 
-ECHO Starting FastAPI backend...
-start "Trady Backend" cmd /k "cd /d \"%BATCH_DIR%\" && call venv\Scripts\activate && uvicorn main:app --reload"
+REM Start FastAPI backend in a new window
+start "Trady Backend" cmd /k "cd /d "%BATCH_DIR%" && uvicorn main:app --reload"
 
-ECHO Starting Next.js frontend...
-start "Trady Frontend" cmd /k "cd /d \"%BATCH_DIR%frontend\" && npm run dev"
+REM Start Next.js frontend in a new window
+start "Trady Frontend" cmd /k "cd /d "%BATCH_DIR%frontend" && npm run dev"
 
-ECHO Both servers are starting in separate windows.
+REM Open Trady frontend in the default browser
+start "" "http://localhost:3000"
+
+pause
