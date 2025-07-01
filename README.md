@@ -53,19 +53,14 @@ This project is structured as a monorepo with two main components: `frontend` an
 
 ### Backend Setup
 
-1.  **Navigate to the backend directory**:
-    ```bash
-    cd backend
-    ```
+1.  **Activate your Python virtual environment** in the root directory.
 
-2.  **Activate your Python virtual environment**.
-
-3.  **Install Python dependencies**:
+2.  **Install Python dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
-4.  **Run the FastAPI server**:
+3.  **Run the FastAPI server**:
     ```bash
     uvicorn main:app --reload
     ```
@@ -95,9 +90,8 @@ This project is structured as a monorepo with two main components: `frontend` an
 
 ```
 /trady-ai
-├── /backend         # FastAPI application
-│   ├── /routers     # API endpoint definitions
-│   ├── main.py      # FastAPI app entry point
+├── main.py          # FastAPI app entry point
+├── trady_brain.py   # Core AI agent logic
 │   └── trady_brain.py # Core LangChain agent logic
 ├── /frontend        # Next.js application
 │   ├── /src
