@@ -1,0 +1,47 @@
+# CodeRabbit Configuration
+review:
+  # Enable or disable the review functionality
+  enabled: true
+
+  # Automatically approve the PR if all checks pass
+  auto_approve: false
+
+  # Comment on the PR with the review summary
+  post_review_comment: true
+
+  # Comment on individual lines of code
+  post_line_comments: true
+
+  # Add labels to the PR based on the review
+  add_labels: true
+
+  # Request changes if there are blocking issues
+  request_changes: true
+
+# Configuration for the code analysis
+analysis:
+  # Enable or disable the analysis functionality
+  enabled: true
+
+  # Analyze the diff between the base and head commits
+  diff_analysis: true
+
+  # Analyze the entire codebase
+  full_repo_analysis: false
+
+  # File patterns to include in the analysis
+  include:
+    - "**/*.py"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.ts"
+    - "**/*.tsx"
+
+  # File patterns to exclude from the analysis
+  exclude:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.next/**"
+    - "**/*.min.js"
+    - "**/*.bundle.js"
