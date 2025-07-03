@@ -1,43 +1,37 @@
-# CodeRabbit Configuration
+version: 2
+
+# Global Configuration
 review:
-  # Enable or disable the review functionality
   enabled: true
-
-  # Automatically approve the PR if all checks pass
   auto_approve: false
-
-  # Comment on the PR with the review summary
   post_review_comment: true
-
-  # Comment on individual lines of code
   post_line_comments: true
-
-  # Add labels to the PR based on the review
   add_labels: true
-
-  # Request changes if there are blocking issues
   request_changes: true
+  max_comments: 100  # Increased for larger PRs
+  min_confidence: 0.7  # Only show high-confidence suggestions
 
-# Configuration for the code analysis
+# Analysis Configuration
 analysis:
-  # Enable or disable the analysis functionality
   enabled: true
-
-  # Analyze the diff between the base and head commits
   diff_analysis: true
-
-  # Analyze the entire codebase
   full_repo_analysis: false
-
-  # File patterns to include in the analysis
+  
+  # File Inclusions
   include:
     - "**/*.py"
     - "**/*.js"
     - "**/*.jsx"
     - "**/*.ts"
     - "**/*.tsx"
+    - "**/*.json"  # For package.json, tsconfig.json, etc.
+    - "**/*.yaml"
+    - "**/*.yml"
+    - "**/*.md"    # For documentation review
+    - "**/Dockerfile*"
+    - "**/docker-compose*.yml"
 
-  # File patterns to exclude from the analysis
+  # File Exclusions
   exclude:
     - "**/node_modules/**"
     - "**/dist/**"
@@ -45,3 +39,171 @@ analysis:
     - "**/.next/**"
     - "**/*.min.js"
     - "**/*.bundle.js"
+    - "**/__pycache__/**"
+    - "**/.pytest_cache/**"
+    - "**/.venv/**"
+    - "**/venv/**"
+    - "**/.git/**"
+    - "**/.github/workflows/*.yaml"  # Exclude GitHub Actions workflows
+
+# Security Configuration
+security:
+  enabled: true
+  secrets_detection: true
+  dependency_check: true
+  sast: true  # Static Application Security Testing
+  dast: false  # Dynamic Application Security Testing (disabled by default as it requires runtime)
+  iac_checks: true  # Infrastructure as Code checks
+
+  # Custom security rules
+  rules:
+    - id: no_hardcoded_secrets
+      severity: critical
+      description: "Detects hardcoded secrets and credentials"
+    - id: sql_injection
+      severity: high
+      description: "Detects potential SQL injection vulnerabilities"
+    - id: xss_vulnerability
+      severity: high
+      description: "Detects potential Cross-Site Scripting (XSS) vulnerabilities"
+
+# Python-Specific Configuration
+python:
+  enabled: true
+  version: "3.9"
+  type_checking: true
+  docstring_style: "google"  # Google style docstrings
+  test_coverage:
+    enabled: true
+    min_coverage: 80  # Minimum test coverage percentage
+    paths:
+      - "**/tests/**"
+  
+  # Linting and Formatting
+  pylint:
+    enabled: true
+    score_threshold: 8.0
+  black:
+    enabled: true
+  isort:
+    enabled: true
+  mypy:
+    enabled: true
+    strict: true
+
+# JavaScript/TypeScript Configuration
+javascript:
+  enabled: true
+  typescript: true
+  react: true
+  nextjs: true
+  version: "18"
+  
+  # Linting and Formatting
+  eslint:
+    enabled: true
+    config: ".eslintrc.js"
+  prettier:
+    enabled: true
+    config: ".prettierrc"
+  
+  # Testing
+  jest:
+    enabled: true
+    config: "jest.config.js"
+  
+  # Bundle Analysis
+  bundle_analysis:
+    enabled: true
+    max_bundle_size: "5MB"
+    max_initial_load: "200KB"
+
+# Performance Rules
+performance:
+  enabled: true
+  rules:
+    - id: large_import
+      severity: warning
+      description: "Detects large module imports"
+    - id: memory_leak
+      severity: high
+      description: "Detects potential memory leaks"
+    - id: n_plus_one_query
+      severity: medium
+      description: "Detects N+1 query problems"
+
+# Documentation Rules
+documentation:
+  enabled: true
+  require_readme: true
+  require_contributing: true
+  require_license: true
+  require_code_comments: true
+  min_comment_density: 20  # Percentage of code that should have comments
+
+# Pull Request Rules
+pull_request:
+  require_tests: true
+  require_reviewers: 1
+  require_approval: true
+  block_on_security_issues: true
+  block_on_critical_issues: true
+  require_descriptions: true
+  min_description_length: 20
+  enforce_semantic_commits: true
+  
+  # Branch Protection
+  branch_protection:
+    enabled: true
+    require_linear_history: true
+    require_status_checks: true
+    required_status_checks:
+      - lint
+      - test
+      - build
+    require_branches_up_to_date: true
+    required_approving_review_count: 1
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: true
+    enforce_admins: true
+
+# Custom Rules
+custom_rules:
+  - name: "API Versioning Check"
+    description: "Ensures API endpoints are versioned"
+    pattern: "@app\.(get|post|put|delete)\(['\"]/v\d+/"
+    severity: warning
+    message: "API endpoints should be versioned (e.g., /v1/resource)"
+  
+  - name: "Error Handling Check"
+    description: "Ensures proper error handling in Python"
+    pattern: "except\s+(Exception|BaseException)"
+    severity: warning
+    message: "Avoid catching generic exceptions. Use specific exception types."
+
+# Ignore Rules (for known issues that need to be addressed later)
+ignore:
+  - id: "some-issue-id"
+    path: "path/to/file"
+    reason: "Temporarily ignoring until refactor is complete"
+
+# Notifications
+notifications:
+  slack:
+    enabled: false
+    webhook_url: ${SLACK_WEBHOOK_URL}
+  email:
+    enabled: false
+    recipients: []
+
+# Auto-fix Configuration
+auto_fix:
+  enabled: true
+  create_commit: true
+  commit_message: "style: auto-fix code style issues [skip ci]"
+  max_changes: 10  # Maximum number of auto-fixes per PR
+  rules:
+    - "formatting"
+    - "imports"
+    - "trailing-whitespace"
+    - "end-of-file-fixer"
