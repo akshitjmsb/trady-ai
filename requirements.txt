@@ -1,4 +1,3 @@
-python-dotenv>=1.0.0
 altair
 attrs
 beautifulsoup4
@@ -31,7 +30,6 @@ pyarrow
 pycparser
 pydeck
 python-dateutil
-python-dotenv
 pytz
 referencing
 requests
