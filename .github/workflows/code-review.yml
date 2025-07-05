@@ -32,7 +32,7 @@ jobs:
         run: |
           python -m pytest
       - name: Run CodeRabbit
-        uses: coderabbitai/coderabbit-action@v1.0.0
+        uses: coderabbitai/coderabbit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           mode: "check"
