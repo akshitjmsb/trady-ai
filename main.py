@@ -8,6 +8,18 @@ from trady_brain import ask_trady
 # --- App & CORS --- #
 app = FastAPI(
     title="Trady AI Backend",
+    description="""
+    # Trady AI Backend API
+    
+    This is the main backend service for Trady AI, providing endpoints for:
+    - Portfolio management and analysis
+    - Stock market data retrieval
+    - AI-powered financial insights
+    - Secure file uploads for portfolio data
+    
+    ## Authentication
+    Note: Currently uses basic authentication. Consider implementing JWT for production.
+    """,
     description="The API server for the Trady AI Next.js frontend.",
     version="1.0.0",
 )
