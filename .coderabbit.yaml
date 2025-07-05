@@ -171,13 +171,13 @@ pull_request:
 custom_rules:
   - name: "API Versioning Check"
     description: "Ensures API endpoints are versioned"
-    pattern: "@app\.(get|post|put|delete)\(['\"]/v\d+/"
+    pattern: '@app\.(get|post|put|delete)\(["'']/v\d+/'
     severity: warning
     message: "API endpoints should be versioned (e.g., /v1/resource)"
-  
+
   - name: "Error Handling Check"
     description: "Ensures proper error handling in Python"
-    pattern: "except\s+(Exception|BaseException)"
+    pattern: '(?i)except\s+(Exception|BaseException)'
     severity: warning
     message: "Avoid catching generic exceptions. Use specific exception types."
 

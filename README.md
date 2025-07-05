@@ -4,6 +4,12 @@ Trady AI is a powerful, self-hosted application that provides insightful analysi
 
 ---
 
+## 🔍 Code Quality
+
+- **Automated Code Reviews**: Integrated with CodeRabbit for AI-powered code reviews on every pull request
+- **Automated Security Scanning**: Continuous security analysis to identify vulnerabilities
+- **Automated Code Improvements**: AI-suggested improvements for better code quality and performance
+
 ## ✨ Features
 
 - **Modern UI**: A clean and responsive user interface built with Next.js, TypeScript, and shadcn-ui.
