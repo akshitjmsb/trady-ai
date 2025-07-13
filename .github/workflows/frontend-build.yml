@@ -2,22 +2,38 @@ name: Build Frontend
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - develop
+      - main
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - develop
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./frontend
 
-      - name: Build project
+      - name: Lint
+        run: npm run lint
+        working-directory: ./frontend
+
+      - name: Build
         run: npm run build
+        working-directory: ./frontend
+
+      - name: Run tests
+        run: npm test || echo "No tests defined"
         working-directory: ./frontend

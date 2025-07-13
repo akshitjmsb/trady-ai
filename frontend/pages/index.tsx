@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import StockChart from '../components/StockChart';
+import Insights from '../components/Insights';
 
 // Mock data for AAPL and MSFT (30 days)
 const mockStockData: { [symbol: string]: { date: string; close: number }[] } = {
@@ -28,6 +29,7 @@ const HomePage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSymbol(input.trim().toUpperCase());
+    console.log(input.trim().toUpperCase());
   };
 
   const chartData = mockStockData[symbol] || [];
@@ -54,13 +56,15 @@ const HomePage: React.FC = () => {
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              disabled={!input.trim()}
+              className={`bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
             >
-              Show Chart
+              Get Insights
             </button>
           </form>
         </div>
         <StockChart symbol={symbol} data={chartData} />
+        <Insights symbol={symbol} />
       </div>
     </div>
   );

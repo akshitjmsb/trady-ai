@@ -1,68 +1,43 @@
-import React from "react";
+import React from 'react';
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
-} from "recharts";
+} from 'recharts';
+
+interface StockData {
+  date: string;
+  close: number;
+}
 
 interface StockChartProps {
   symbol: string;
-  data: { date: string; close: number }[];
+  data: StockData[];
 }
 
-const StockChart: React.FC<StockChartProps> = ({ symbol, data }) => {
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-        No data available for {symbol}.
-      </div>
-    );
-  }
 
+
+const StockChart: React.FC<StockChartProps> = ({ symbol, data }) => {
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow p-4 md:p-6">
-      <h2 className="text-lg md:text-xl font-semibold mb-4 text-center">
-        {symbol} - Last 30 Days Closing Price
-      </h2>
-      <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={data} margin={{ top: 20, right: 24, left: 0, bottom: 16 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            tickFormatter={(date) => {
-              // Format date as MM/DD or similar for readability
-              const d = new Date(date);
-              return `${d.getMonth() + 1}/${d.getDate()}`;
-            }}
-            minTickGap={12}
-            tick={{ fontSize: 12 }}
-          />
-          <YAxis
-            domain={["auto", "auto"]}
-            tick={{ fontSize: 12 }}
-            tickFormatter={(v) => `$${v.toFixed(2)}`}
-          />
-          <Tooltip
-            labelFormatter={(label) => {
-              const d = new Date(label);
-              return d.toLocaleDateString();
-            }}
-            formatter={(value: any) => [`$${value.toFixed(2)}`, "Close"]}
-          />
-          <Line
-            type="monotone"
-            dataKey="close"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 6 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
+      <h2 className="text-xl font-semibold mb-4 text-blue-700 text-center">{symbol} Stock Chart</h2>
+      {data.length ? (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" tickFormatter={(d) => d.slice(5)} />
+            <YAxis tickFormatter={(v) => `$${v.toFixed(0)}`} />
+            <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Close']} />
+            <Line type="monotone" dataKey="close" stroke="#2563eb" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="text-gray-500 text-center py-8">No data available for this symbol.</div>
+      )}
     </div>
   );
 };
