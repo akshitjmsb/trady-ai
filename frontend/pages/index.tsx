@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import StockChart from '../components/StockChart';
-import Insights from '../components/Insights';
 
 // Mock data for AAPL and MSFT (30 days)
 const mockStockData: { [symbol: string]: { date: string; close: number }[] } = {
@@ -62,7 +61,6 @@ const HomePage: React.FC = () => {
           </form>
         </div>
         <StockChart symbol={symbol} data={chartData} />
-        <Insights symbol={symbol} />
       </div>
     </div>
   );
