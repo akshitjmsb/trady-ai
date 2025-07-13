@@ -36,31 +36,33 @@ const Insights: React.FC<InsightsProps> = ({ symbol }) => {
       .finally(() => setLoading(false));
   }, [symbol]);
 
-  if (!symbol) {
-    return (
-      <div className="flex flex-col items-center justify-center mt-6 text-gray-500">
-        Please enter a stock symbol to get AI-powered insights.
-      </div>
-    );
-  }
-
   return (
     <div className="w-full max-w-2xl mx-auto mt-6">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
-        <h3 className="text-lg font-semibold mb-2 text-blue-700 text-center">AI Investment Insight</h3>
+      <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-100">
+        <h3 className="text-lg font-semibold mb-4 text-blue-700 text-center">AI Investment Insight</h3>
+        {!symbol && (
+          <div className="text-gray-500 text-center py-8">
+            Please enter a stock symbol to get AI-powered insights.
+          </div>
+        )}
         {loading && (
           <div className="flex justify-center items-center min-h-[64px]">
             <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
             </svg>
+            <span className="ml-2 text-blue-500">Loading insight...</span>
           </div>
         )}
         {error && (
-          <div className="text-red-600 text-center font-medium min-h-[64px]">{error}</div>
+          <div className="text-red-600 text-center font-medium min-h-[64px]">
+            {error}
+          </div>
         )}
         {!loading && !error && insight && (
-          <div className="text-gray-800 text-center min-h-[64px]">{insight}</div>
+          <div className="text-gray-800 text-center text-base min-h-[64px] whitespace-pre-line">
+            {insight}
+          </div>
         )}
       </div>
     </div>
