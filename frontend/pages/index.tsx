@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StockChart from '../components/StockChart';
 import Insights from '../components/Insights';
+import StockSummary from '../components/StockSummary';
+
+type StockSummaryData = {
+  name: string;
+  price: number | string;
+  marketCap: string;
+  peRatio: number | string;
+  sector: string;
+} | null;
 
 // Mock data for AAPL and MSFT (30 days)
 const mockStockData: { [symbol: string]: { date: string; close: number }[] } = {
@@ -25,19 +34,46 @@ const mockStockData: { [symbol: string]: { date: string; close: number }[] } = {
 const HomePage: React.FC = () => {
   const [symbol, setSymbol] = useState('AAPL');
   const [input, setInput] = useState('AAPL');
+  const [summary, setSummary] = useState<StockSummaryData>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStockSummary = async (symbol: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:8000/api/stock-summary?symbol=${symbol}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch stock summary');
+      }
+      const data = await response.json();
+      setSummary(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setSummary(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSymbol(input.trim().toUpperCase());
-    console.log(input.trim().toUpperCase());
+    const newSymbol = input.trim().toUpperCase();
+    setSymbol(newSymbol);
+    fetchStockSummary(newSymbol);
   };
+
+  // Fetch summary when component mounts or symbol changes
+  useEffect(() => {
+    fetchStockSummary(symbol);
+  }, [symbol]);
 
   const chartData = mockStockData[symbol] || [];
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-2 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg mb-8">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
           <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
             Stock Insights
           </h1>
@@ -62,9 +98,10 @@ const HomePage: React.FC = () => {
               Get Insights
             </button>
           </form>
+          <StockSummary data={summary} isLoading={isLoading} error={error} />
+          <StockChart data={chartData} symbol={symbol} />
+          <Insights symbol={symbol} />
         </div>
-        <StockChart symbol={symbol} data={chartData} />
-        <Insights symbol={symbol} />
       </div>
     </div>
   );
