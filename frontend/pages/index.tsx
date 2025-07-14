@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import StockChart from '../components/StockChart';
-import Insights from '../components/Insights';
-import StockSummary from '../components/StockSummary';
+import SnapshotCard from '../components/SnapshotCard';
 
 type StockSummaryData = {
   name: string;
@@ -98,9 +96,9 @@ const HomePage: React.FC = () => {
               Get Insights
             </button>
           </form>
-          <StockSummary data={summary} isLoading={isLoading} error={error} />
-          <StockChart data={chartData} symbol={symbol} />
-          <Insights symbol={symbol} />
+          {symbol && (
+            <SnapshotCard symbol={symbol} />
+          )}
         </div>
       </div>
     </div>
