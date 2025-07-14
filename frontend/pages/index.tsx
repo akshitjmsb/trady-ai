@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SnapshotCard from '../components/SnapshotCard';
+import EarningsAnalysis from '../components/EarningsAnalysis';
 
 type StockSummaryData = {
   name: string;
@@ -97,7 +98,10 @@ const HomePage: React.FC = () => {
             </button>
           </form>
           {symbol && (
-            <SnapshotCard symbol={symbol} />
+            <>
+              <SnapshotCard symbol={symbol} />
+              <EarningsAnalysis symbol={symbol} />
+            </>
           )}
         </div>
       </div>

@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import yfinance as yf
 from price_history_route import router as price_history_router
+from earnings_analysis_route import router as earnings_analysis_router
 
 app = FastAPI()
 app.include_router(price_history_router)
+app.include_router(earnings_analysis_router)
 
 # Allow all origins for development (adjust for production)
 app.add_middleware(
