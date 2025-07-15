@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import SnapshotCard from '../components/SnapshotCard';
 import EarningsAnalysis from '../components/EarningsAnalysis';
+import BuffettReview from '../components/BuffettReview';
+import MungerReview from '../components/MungerReview';
 
 type StockSummaryData = {
   name: string;
@@ -36,6 +38,7 @@ const HomePage: React.FC = () => {
   const [summary, setSummary] = useState<StockSummaryData>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('snapshot');
 
   const fetchStockSummary = async (symbol: string) => {
     setIsLoading(true);
@@ -99,8 +102,43 @@ const HomePage: React.FC = () => {
           </form>
           {symbol && (
             <>
-              <SnapshotCard symbol={symbol} />
-              <EarningsAnalysis symbol={symbol} />
+              {/* Tab Navigation */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                  <button
+                    onClick={() => setActiveTab('snapshot')}
+                    className={`${activeTab === 'snapshot' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Snapshot
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('earnings')}
+                    className={`${activeTab === 'earnings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Earnings Analysis
+                  </button>
+                                    <button
+                    onClick={() => setActiveTab('buffett')}
+                    className={`${activeTab === 'buffett' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Buffett-Style Review
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('munger')}
+                    className={`${activeTab === 'munger' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Munger Mgmt Review
+                  </button>
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="mt-6">
+                {activeTab === 'snapshot' && <SnapshotCard symbol={symbol} />}
+                {activeTab === 'earnings' && <EarningsAnalysis symbol={symbol} />}
+                                {activeTab === 'buffett' && <BuffettReview symbol={symbol} />}
+                {activeTab === 'munger' && <MungerReview symbol={symbol} />}
+              </div>
             </>
           )}
         </div>

@@ -4,10 +4,14 @@ from fastapi.responses import JSONResponse
 import yfinance as yf
 from price_history_route import router as price_history_router
 from earnings_analysis_route import router as earnings_analysis_router
+from buffett_review_route import router as buffett_review_router
+from munger_review_route import router as munger_review_router
 
 app = FastAPI()
 app.include_router(price_history_router)
 app.include_router(earnings_analysis_router)
+app.include_router(buffett_review_router)
+app.include_router(munger_review_router)
 
 # Allow all origins for development (adjust for production)
 app.add_middleware(
