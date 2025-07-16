@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+import { useState, FormEvent } from 'react';
+import Head from 'next/head';
+import ThemeToggle from '@/components/ThemeToggle';
+import { Icons } from '@/components/icons';
+import SnapshotPro from '@/components/SnapshotPro';
+import BuffettReview from '@/components/BuffettReview';
+import MungerReview from '@/components/MungerReview';
+import EarningsAnalysis from '@/components/EarningsAnalysis';
 
-import SnapshotPro from '../components/SnapshotPro';
-import EarningsAnalysis from '../components/EarningsAnalysis';
-import BuffettReview from '../components/BuffettReview';
-import MungerReview from '../components/MungerReview';
-import ThemeToggle from '../components/ThemeToggle';
-
-const HomePage: React.FC = () => {
+const HomePage = () => {
   const [symbol, setSymbol] = useState('AAPL');
   const [input, setInput] = useState('AAPL');
-  const [activeTab, setActiveTab] = useState('snapshot');
+  const [activeTab, setActiveTab] = useState('ai-reviews');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newSymbol = input.trim().toUpperCase();
     if (newSymbol) {
@@ -20,76 +20,92 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const tabOptions = [
+    { key: 'ai-reviews', label: 'AI Reviews' },
+    { key: 'earnings', label: 'Earnings' },
+  ];
+
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'snapshot':
-        return <SnapshotPro symbol={symbol} />;
+      case 'ai-reviews':
+        return (
+          <div className="space-y-4">
+            <BuffettReview symbol={symbol} />
+            <MungerReview symbol={symbol} />
+          </div>
+        );
       case 'earnings':
         return <EarningsAnalysis symbol={symbol} />;
-      case 'buffett':
-        return <BuffettReview symbol={symbol} />;
-      case 'munger':
-        return <MungerReview symbol={symbol} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Theme Toggle */}
-        <div className="flex justify-end pt-4 pr-2">
-          <ThemeToggle />
-        </div>
-        <div className="bg-slate-50 dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
-          <div className="text-center mb-8">
-            <div className="flex justify-center items-center mb-2 h-10">
-              <Image src="/assets/logo/logo-dark.svg" alt="Trady Logo" width={110} height={28} className="dark:hidden" />
-              <Image src="/assets/logo/logo-light.svg" alt="Trady Logo" width={110} height={28} className="hidden dark:block" />
-            </div>
-            <p className='text-base text-slate-500 dark:text-slate-400'>Your AI-Powered Stock Analysis Co-Pilot</p>
-          </div>
-          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3 items-center justify-center">
-            <input
-              type="text"
-              id="symbol"
-              value={input}
-              onChange={(e) => setInput(e.target.value.toUpperCase())}
-              className="w-full md:w-48 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all"
-              placeholder="e.g., AAPL, TSLA, INFY.NS"
-              maxLength={12}
-            />
-            <button
-              type="submit"
-              disabled={!input.trim()}
-              className={`bg-blue-600 dark:bg-blue-500 text-white py-2 px-5 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-900 ${!input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors'}`}
-            >
-              Analyze
-            </button>
-          </form>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
+      <Head>
+        <title>Trady AI - Power Dashboard</title>
+        <meta name="description" content="AI-powered stock analysis dashboard" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
-        {symbol && (
-          <div className='mt-8 bg-slate-50 dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700'>
-            <div className="border-b border-slate-200 dark:border-slate-700">
-              <nav className="-mb-px flex space-x-2 justify-center" aria-label="Tabs">
-                {['snapshot', 'earnings', 'buffett', 'munger'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm capitalize transition-all duration-200 ease-in-out focus:outline-none ${activeTab === tab ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 border-b-transparent text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
-                  >
-                    {tab.replace('-', ' ')}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            <div className="mt-6">
-              {renderTabContent()}
-            </div>
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <Icons.logo className="h-8 w-8 text-blue-600" />
+            <h1 className="text-2xl font-bold">Power Dashboard</h1>
           </div>
+          <div className="flex items-center space-x-4">
+            <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter symbol..."
+                className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md py-1.5 px-3 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                className="bg-blue-600 text-white py-1.5 px-4 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 hover:bg-blue-700 transition-colors"
+              >
+                Analyze
+              </button>
+            </form>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {symbol ? (
+          <main className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-3">
+              <SnapshotPro symbol={symbol} />
+            </div>
+            <div className="lg:col-span-2">
+              <div className="bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800">
+                <div className="border-b border-slate-200 dark:border-slate-700">
+                  <nav className="p-1.5 flex space-x-1">
+                    {tabOptions.map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
+                          activeTab === tab.key
+                            ? 'bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+                <div className="p-4 sm:p-6">{renderTabContent()}</div>
+              </div>
+            </div>
+          </main>
+        ) : (
+          <div className="text-center py-20 text-slate-500">Please enter a stock symbol to begin analysis.</div>
         )}
       </div>
     </div>
