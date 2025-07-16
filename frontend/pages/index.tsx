@@ -1,147 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import SnapshotCard from '../components/SnapshotCard';
+import React, { useState } from 'react';
+import Image from 'next/image';
+
+import SnapshotPro from '../components/SnapshotPro';
 import EarningsAnalysis from '../components/EarningsAnalysis';
 import BuffettReview from '../components/BuffettReview';
 import MungerReview from '../components/MungerReview';
-
-type StockSummaryData = {
-  name: string;
-  price: number | string;
-  marketCap: string;
-  peRatio: number | string;
-  sector: string;
-} | null;
-
-// Mock data for AAPL and MSFT (30 days)
-const mockStockData: { [symbol: string]: { date: string; close: number }[] } = {
-  AAPL: Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    return {
-      date: date.toISOString().slice(0, 10),
-      close: 180 + Math.sin(i / 4) * 5 + Math.random() * 2, // Simulated close price
-    };
-  }),
-  MSFT: Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    return {
-      date: date.toISOString().slice(0, 10),
-      close: 330 + Math.cos(i / 5) * 4 + Math.random() * 2,
-    };
-  }),
-};
+import ThemeToggle from '../components/ThemeToggle';
 
 const HomePage: React.FC = () => {
   const [symbol, setSymbol] = useState('AAPL');
   const [input, setInput] = useState('AAPL');
-  const [summary, setSummary] = useState<StockSummaryData>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('snapshot');
-
-  const fetchStockSummary = async (symbol: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`http://localhost:8000/api/stock-summary?symbol=${symbol}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch stock summary');
-      }
-      const data = await response.json();
-      setSummary(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setSummary(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newSymbol = input.trim().toUpperCase();
-    setSymbol(newSymbol);
-    fetchStockSummary(newSymbol);
+    if (newSymbol) {
+      setSymbol(newSymbol);
+    }
   };
 
-  // Fetch summary when component mounts or symbol changes
-  useEffect(() => {
-    fetchStockSummary(symbol);
-  }, [symbol]);
-
-  const chartData = mockStockData[symbol] || [];
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'snapshot':
+        return <SnapshotPro symbol={symbol} />;
+      case 'earnings':
+        return <EarningsAnalysis symbol={symbol} />;
+      case 'buffett':
+        return <BuffettReview symbol={symbol} />;
+      case 'munger':
+        return <MungerReview symbol={symbol} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-2 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-            Stock Insights
-          </h1>
-          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-center justify-center mb-4">
-            <label htmlFor="symbol" className="block text-sm font-medium text-gray-700">
-              Enter Stock Symbol
-            </label>
+    <div className="min-h-screen bg-white text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Theme Toggle */}
+        <div className="flex justify-end pt-4 pr-2">
+          <ThemeToggle />
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+          <div className="text-center mb-8">
+            <div className="flex justify-center items-center mb-2 h-10">
+              <Image src="/assets/logo/logo-dark.svg" alt="Trady Logo" width={110} height={28} className="dark:hidden" />
+              <Image src="/assets/logo/logo-light.svg" alt="Trady Logo" width={110} height={28} className="hidden dark:block" />
+            </div>
+            <p className='text-base text-slate-500 dark:text-slate-400'>Your AI-Powered Stock Analysis Co-Pilot</p>
+          </div>
+          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3 items-center justify-center">
             <input
               type="text"
               id="symbol"
               value={input}
               onChange={(e) => setInput(e.target.value.toUpperCase())}
-              className="w-full md:w-40 px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., AAPL"
-              maxLength={8}
+              className="w-full md:w-48 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all"
+              placeholder="e.g., AAPL, TSLA, INFY.NS"
+              maxLength={12}
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className={`bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+              className={`bg-blue-600 dark:bg-blue-500 text-white py-2 px-5 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-900 ${!input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors'}`}
             >
-              Get Insights
+              Analyze
             </button>
           </form>
-          {symbol && (
-            <>
-              {/* Tab Navigation */}
-              <div className="border-b border-gray-200 dark:border-gray-700">
-                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-                  <button
-                    onClick={() => setActiveTab('snapshot')}
-                    className={`${activeTab === 'snapshot' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Snapshot
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('earnings')}
-                    className={`${activeTab === 'earnings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Earnings Analysis
-                  </button>
-                                    <button
-                    onClick={() => setActiveTab('buffett')}
-                    className={`${activeTab === 'buffett' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Buffett-Style Review
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('munger')}
-                    className={`${activeTab === 'munger' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Munger Mgmt Review
-                  </button>
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="mt-6">
-                {activeTab === 'snapshot' && <SnapshotCard symbol={symbol} />}
-                {activeTab === 'earnings' && <EarningsAnalysis symbol={symbol} />}
-                                {activeTab === 'buffett' && <BuffettReview symbol={symbol} />}
-                {activeTab === 'munger' && <MungerReview symbol={symbol} />}
-              </div>
-            </>
-          )}
         </div>
+
+        {symbol && (
+          <div className='mt-8 bg-slate-50 dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700'>
+            <div className="border-b border-slate-200 dark:border-slate-700">
+              <nav className="-mb-px flex space-x-2 justify-center" aria-label="Tabs">
+                {['snapshot', 'earnings', 'buffett', 'munger'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`whitespace-nowrap py-3 px-4 rounded-t-md font-medium text-sm capitalize transition-all duration-200 ease-in-out focus:outline-none ${activeTab === tab ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 border-b-transparent text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
+                  >
+                    {tab.replace('-', ' ')}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            <div className="mt-6">
+              {renderTabContent()}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

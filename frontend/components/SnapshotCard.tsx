@@ -30,6 +30,21 @@ function formatChange(change: number | null) {
   return `${sign}${change.toFixed(2)}`;
 }
 
+function formatTimestamp(timestamp: number | null): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000);
+  // Check if the date is valid and not the epoch
+  if (isNaN(date.getTime()) || date.getTime() < 1000000) return '';
+  return `At close: ${date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })}`;
+}
+
 const metricLabels = [
   { key: 'open', label: 'Open' },
   { key: 'dayLow', label: 'Day Low' },
@@ -112,11 +127,11 @@ const SnapshotCard: React.FC<{ symbol: string }> = ({ symbol }) => {
               <span className="text-3xl font-extrabold">{formatPrice(data.header.price)}</span>
               <span className={`ml-2 font-semibold ${isUp ? 'text-green-600' : 'text-red-600'}`}>{formatChange(data.header.change)}</span>
               {data.header.afterHours && (
-                <span className="ml-2 text-xs text-gray-500">AH: {formatPrice(data.header.afterHours)}</span>
+                <span className="ml-2 text-sm text-gray-500">AH: {formatPrice(data.header.afterHours)}</span>
               )}
             </div>
             {data.header.timestamp && (
-              <div className="text-xs text-gray-400 mt-1">{new Date(data.header.timestamp * 1000).toLocaleString()}</div>
+              <div className="text-sm text-gray-500 mt-1">{formatTimestamp(data.header.timestamp)}</div>
             )}
           </div>
 

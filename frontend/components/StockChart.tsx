@@ -29,7 +29,11 @@ const StockChart: React.FC<StockChartProps> = ({ symbol, data }) => {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" tickFormatter={(d) => d.slice(5)} />
+            <XAxis
+  dataKey="date"
+  interval={1} // Show every 2nd tick
+  tickFormatter={(date) => date.slice(5, 7) + '/' + date.slice(2, 4)}
+/>
             <YAxis tickFormatter={(v) => `$${v.toFixed(0)}`} />
             <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Close']} />
             <Line type="monotone" dataKey="close" stroke="#2563eb" strokeWidth={2} dot={false} />
