@@ -1,0 +1,5 @@
+fastapi
+yfinance
+google-generativeai
+python-dotenv
+uvicorn
